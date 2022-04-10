@@ -117,3 +117,4 @@ dmypy.json
 #data
 acdc_train/
 *.hdf5
+*.csv
