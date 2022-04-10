@@ -3,11 +3,12 @@
 source env/bin/activate
 
 model=$1
-initial_lr=$2
-end_lr=$3
-inc=$4
+nb_epochs=$2
+initial_lr=$3
+end_lr=$4
+inc=$5
 
-nb_epochs=1
+
 
 default_directory="acdc_train"
 
