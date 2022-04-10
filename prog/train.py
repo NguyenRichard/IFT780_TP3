@@ -183,11 +183,7 @@ if __name__ == "__main__":
     else :
         df = pd.DataFrame(columns=["Model","Learning Rate","Dice"])
 
-    df2 = {'Model': args.model, 'Learing Rate': learning_rate, 'Dice': dice}
+    df2 = {'Model': str(args.model), 'Learning Rate': learning_rate, 'Dice': dice}
     df = df.append(df2, ignore_index = True)
-    df.to_csv(join(args.exp_name,"Lr&Dice.csv"))
-
-        
-
-    
+    df.to_csv("Lr&Dice.csv")
 
