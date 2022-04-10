@@ -16,17 +16,18 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+import pandas as pd
+
 from os import mkdir
 from os.path import join
-import pandas as pd
+from os.path import exists
 
 from CNNTrainTestManager import CNNTrainTestManager, optimizer_setup
 from HDF5Dataset import HDF5Dataset
 from models.CNN import CNNet
 from models.CNNFullNet import FullNet
+from models.UNet import UNet
 from transforms import identity
-from transforms import crop_and_hflip
-
 
 def argument_parser():
     """
@@ -43,7 +44,7 @@ def argument_parser():
     parser.add_argument("exp_name", type=str,
                         help="Name of experiment")
     parser.add_argument('--model', type=str, default="CNNet",
-                        choices=["CNNet", "FullNet"])
+                        choices=["CNNet", "FullNet", "UNet", "UNetDense"])
     parser.add_argument('--dataset_file', type=str,
                         help="Location of the hdf5 file")
     parser.add_argument('--batch_size', type=int, default=20,
@@ -62,22 +63,17 @@ def argument_parser():
                         help="The number of layer in dense blocks")
     parser.add_argument('--data_aug', action='store_true',
                         help="Data augmentation")
-    parser.add_argument('--data_aug_type', type=str, default="crop_and_hflip", choices=["crop_and_hflip"],
-                        help="The type of data augmentation used")
     parser.add_argument('--predict', action='store_true',
                         help="Load weights to predict the mask of a randomly selected image from the test set")
-    parser.add_argument('--load_checkpoint', action='store_true',
-                        help="Load saved checkpoint")
-    parser.add_argument('--save_checkpoint', action='store_true',
-                        help="Save checkpoint")
-    parser.add_argument('--checkpoint_filename', type=str, default="checkpoint",
-                        help='Name of the checkpoint file')
+    parser.add_argument('--bilinear', type=bool, default=False,
+                        help="Way of upsampling, bilinear or not")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
-
     args = argument_parser()
+
+    path = '' + str(args.model)
 
     batch_size = args.batch_size
     num_epochs = args.num_epochs
@@ -86,24 +82,17 @@ if __name__ == "__main__":
     data_augment = args.data_aug
     num_layers = args.dnl
     growth_rate = args.dgr
-    load_checkpoint = args.load_checkpoint
-    save_checkpoint = args.save_checkpoint
-    checkpoint_filename = args.checkpoint_filename
-    data_augment_type = args.data_aug_type
+    bilinear = args.bilinear
 
+    print("Learing rate : ",learning_rate)
 
     # set hdf5 path according your hdf5 file location
     hdf5_file = args.dataset_file
 
     # Transform is used to normalize data and more
-    if data_augment_type == 'crop_and_hflip':
-        data_augment_transform = [
-            crop_and_hflip
-        ]
-    else:
-        data_augment_transform = {
-            identity
-        }
+    data_augment_transform = [
+        identity
+    ]
 
     if data_augment:
         print('Using data augmentation')
@@ -120,8 +109,7 @@ if __name__ == "__main__":
     num_modalities = train_set.num_modalities
 
     if args.optimizer == 'SGD':
-        optimizer_factory = optimizer_setup(
-            torch.optim.SGD, lr=learning_rate, momentum=0.9)
+        optimizer_factory = optimizer_setup(torch.optim.SGD, lr=learning_rate, momentum=0.9)
     elif args.optimizer == 'Adam':
         optimizer_factory = optimizer_setup(optim.Adam, lr=learning_rate)
 
@@ -129,6 +117,11 @@ if __name__ == "__main__":
         model = CNNet(num_classes=num_classes, in_channels=num_modalities)
     elif args.model == 'FullNet':
         model = FullNet(num_classes=num_classes, in_channels=num_modalities, num_layers=num_layers, growth_rate=growth_rate)
+    elif args.model == 'UNet':
+        model = UNet(num_classes=num_classes, num_channels=num_modalities, bilinear=bilinear)
+    elif args.model == 'UNetDense':
+        model = UNet(num_classes=num_classes, num_channels=num_modalities, bilinear=bilinear, dense = True)
+
 
     model_trainer = CNNTrainTestManager(model=model,
                                         trainset=train_set,
@@ -147,11 +140,13 @@ if __name__ == "__main__":
                                         )
 
     dice = 0
-    if args.predict:
-        model.load_weights(join(args.exp_name, 'CNNet.pt'))
+
+    if exists(join(path, args.model + '.pt')):
+        model.load_weights(join(args.model, args.model + '.pt'))
         dice = model_trainer.evaluate_on_test_set()
         print("predicting the mask of a randomly selected image from test set")
-        model_trainer.plot_image_mask_prediction(args.exp_name)
+        for i in range(2, 4):
+            model_trainer.plot_image_mask_prediction(path , i,learning_rate)
     else:
         if not os.path.exists(args.exp_name):
             mkdir(args.exp_name)
@@ -161,7 +156,8 @@ if __name__ == "__main__":
         dice = model_trainer.evaluate_on_test_set()
         # save the model's weights for prediction (see help for more details)
         model.save(args.exp_name)
-        model_trainer.plot_image_mask_prediction(args.exp_name)
+
+        model_trainer.plot_image_mask_prediction(args.exp_name,2,learning_rate)# 2 is the number write on the fig you save
         model_trainer.plot_metrics(args.exp_name)
 
     if os.path.isfile(join(args.exp_name,"Lr&Dice.csv")):
@@ -172,3 +168,8 @@ if __name__ == "__main__":
     df2 = {'Model': args.model, 'Learing Rate': learning_rate, 'Dice': dice}
     df = df.append(df2, ignore_index = True)
     df.to_csv(join(args.exp_name,"Lr&Dice.csv"))
+
+        
+
+    
+
