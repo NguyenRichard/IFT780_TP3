@@ -258,8 +258,9 @@ class CNNTrainTestManager(object):
                 test_outputs = self.model(test_inputs)
                 assert torch.where(test_labels)
                 accuracies += self.accuracy(test_outputs, test_labels)
-        print("Dice on the test set: {:05.3f} %".format(
-            accuracies / len(test_loader)))
+        dice = accuracies / len(test_loader)
+        print("Dice on the test set: {:05.3f} %".format(dice))
+        return dice
 
     def plot_metrics(self, path):
         """

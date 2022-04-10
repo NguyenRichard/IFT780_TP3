@@ -18,6 +18,7 @@ import torch.optim as optim
 
 from os import mkdir
 from os.path import join
+import pandas as pd
 
 from CNNTrainTestManager import CNNTrainTestManager, optimizer_setup
 from HDF5Dataset import HDF5Dataset
@@ -144,9 +145,11 @@ if __name__ == "__main__":
                                         data_augmentation=data_augment,
                                         data_augmentation_type=data_augment_type
                                         )
+
+    dice = 0
     if args.predict:
         model.load_weights(join(args.exp_name, 'CNNet.pt'))
-        model_trainer.evaluate_on_test_set()
+        dice = model_trainer.evaluate_on_test_set()
         print("predicting the mask of a randomly selected image from test set")
         model_trainer.plot_image_mask_prediction(args.exp_name)
     else:
@@ -155,8 +158,17 @@ if __name__ == "__main__":
         print("Training {} for {} epochs".format(
             model.__class__.__name__, args.num_epochs))
         model_trainer.train(num_epochs)
-        model_trainer.evaluate_on_test_set()
+        dice = model_trainer.evaluate_on_test_set()
         # save the model's weights for prediction (see help for more details)
         model.save(args.exp_name)
         model_trainer.plot_image_mask_prediction(args.exp_name)
         model_trainer.plot_metrics(args.exp_name)
+
+    if os.path.isfile("Lr&Dice.csv"):
+        df = pd.read_csv("Lr&Dice.csv")
+    else :
+        df = pd.DataFrame(columns=["Model","Learning Rate","Dice"])
+
+    df2 = {'Model': args.model, 'Learing Rate': learning_rate, 'Dice': dice}
+    df = df.append(df2, ignore_index = True)
+    df.to_csv("Lr&Dice.csv")
