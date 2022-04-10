@@ -29,7 +29,6 @@ from models.CNNFullNet import FullNet
 from models.UNet import UNet
 from transforms import identity
 
-
 def argument_parser():
     """
         A parser to allow user to easily experiment different models along with
@@ -45,7 +44,6 @@ def argument_parser():
     parser.add_argument("exp_name", type=str,
                         help="Name of experiment")
     parser.add_argument('--model', type=str, default="CNNet",
-                        choices=["CNNet", "FullNet"])
                         choices=["CNNet", "FullNet","UNet","UNetDense"])
     parser.add_argument('--dataset_file', type=str,
                         help="Location of the hdf5 file")
@@ -76,6 +74,7 @@ if __name__ == "__main__":
     args = argument_parser()
 
     path = '' + str(args.model)
+
     batch_size = args.batch_size
     num_epochs = args.num_epochs
     val_set = args.validation
@@ -91,6 +90,9 @@ if __name__ == "__main__":
     hdf5_file = args.dataset_file
 
     # Transform is used to normalize data and more
+    data_augment_transform = [
+        identity
+    ]
 
     if data_augment:
         print('Using data augmentation')
@@ -107,6 +109,7 @@ if __name__ == "__main__":
     num_modalities = train_set.num_modalities
 
     if args.optimizer == 'SGD':
+        optimizer_factory = optimizer_setup(torch.optim.SGD, lr=learning_rate, momentum=0.9)
     elif args.optimizer == 'Adam':
         optimizer_factory = optimizer_setup(optim.Adam, lr=learning_rate)
 
@@ -127,14 +130,12 @@ if __name__ == "__main__":
                                         loss_fn=nn.CrossEntropyLoss(),
                                         optimizer_factory=optimizer_factory,
                                         validation=val_set,
-    if args.predict:
-        model.load_weights(join(args.exp_name, 'CNNet.pt'))
-        model_trainer.evaluate_on_test_set()
+                                        use_cuda=True)
+
     if exists(join(path, args.model + '.pt')):
         model.load_weights(join(args.model, args.model + '.pt'))
         dice = model_trainer.evaluate_on_test_set()
         print("predicting the mask of a randomly selected image from test set")
-        model_trainer.plot_image_mask_prediction(args.exp_name)
         for i in range(2, 4):
             model_trainer.plot_image_mask_prediction(path , i,learning_rate)
     else:
@@ -143,14 +144,12 @@ if __name__ == "__main__":
         print("Training {} for {} epochs".format(
             model.__class__.__name__, args.num_epochs))
         model_trainer.train(num_epochs)
-        model_trainer.evaluate_on_test_set()
         dice = model_trainer.evaluate_on_test_set()
         # save the model's weights for prediction (see help for more details)
         model.save(args.exp_name)
-        model_trainer.plot_image_mask_prediction(args.exp_name)
-        model_trainer.plot_metrics(args.exp_name)
         
         model_trainer.plot_image_mask_prediction(path ,2,learning_rate)# 2 is the number write on the fig you save
+
         model_trainer.plot_metrics(path)
     
     

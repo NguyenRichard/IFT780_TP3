@@ -18,6 +18,7 @@ from os.path import join
 from utils import mean_dice, convert_mask_to_rgb_image
 import matplotlib.pyplot as plt
 
+
 class CNNTrainTestManager(object):
     """
     Class used the train and test the given model in the parameters
@@ -31,6 +32,7 @@ class CNNTrainTestManager(object):
                                               torch.optim.Optimizer]),
                  batch_size=1,
                  validation=None,
+                 use_cuda=False):
         """
         Args:
             model: model to train
@@ -82,6 +84,7 @@ class CNNTrainTestManager(object):
         train_loader = self.data_manager.get_train_set()
 
         # train num_epochs times
+        for epoch in range(num_epochs):
             print("Epoch: {} of {}".format(epoch + 1, num_epochs))
             train_loss = 0.0
 
@@ -183,23 +186,6 @@ class CNNTrainTestManager(object):
         return mean_dice(outputs, labels).item()
 
     def evaluate_on_test_set(self):
-        """
-        Evaluate the model on the test set
-        :returns;
-            Accuracy of the model on the test set
-        """
-        test_loader = self.data_manager.get_test_set()
-        accuracies = 0
-        with torch.no_grad():
-            for data in test_loader:
-                test_inputs, test_labels = data[0].to(
-                    self.device, dtype=torch.float), data[1].to(
-                        self.device, dtype=torch.long)
-                test_outputs = self.model(test_inputs)
-                assert torch.where(test_labels)
-                accuracies += self.accuracy(test_outputs, test_labels)
-        print("Dice on the test set: {:05.3f} %".format(
-            accuracies / len(test_loader)))
       """
       Evaluate the model on the test set
       :returns;
