@@ -37,8 +37,10 @@ do
     echo "Start training with learning rate $i."
     python train.py $save_directory --data_aug --model=FullNet --dgr=4 --dnl=4 --lr=$i --load_checkpoint --save_checkpoint --dataset='./02Heart.hdf5' --num-epochs=$nb_epochs --batch_size=2
   elif [ "$model" = "UNet" ]; then
+    echo "Start training with learning rate $i."
     python train.py $save_directory --data_aug --model=UNet --lr=$i --load_checkpoint --save_checkpoint --dataset='./02Heart.hdf5' --num-epochs=$nb_epochs --batch_size=2
   elif [ "$model" = "UNetDense" ]; then
+    echo "Start training with learning rate $i."
     python train.py $save_directory --data_aug --model=UNetDense --lr=$i --load_checkpoint --save_checkpoint --dataset='./02Heart.hdf5' --num-epochs=$nb_epochs --batch_size=2
   elif [ "$model" = "ResNet" ]; then
     echo "TODO add ResNet command"
