@@ -44,7 +44,7 @@ def argument_parser():
     parser.add_argument("exp_name", type=str,
                         help="Name of experiment")
     parser.add_argument('--model', type=str, default="CNNet",
-                        choices=["CNNet", "FullNet","UNet","UNetDense"])
+                        choices=["CNNet", "FullNet", "UNet", "UNetDense"])
     parser.add_argument('--dataset_file', type=str,
                         help="Location of the hdf5 file")
     parser.add_argument('--batch_size', type=int, default=20,
