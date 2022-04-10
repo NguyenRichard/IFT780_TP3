@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from scipy import signal
 
 def identity(x, is_label=False):
     """ Performs the identity transformation on a volume
@@ -32,7 +33,6 @@ def crop(x, is_label=False):
     return padded
 
 def hflip(x, is_label=False):
-
     return np.flip(x, axis=0).copy()
 
 
@@ -42,3 +42,20 @@ def crop_and_hflip(x, is_label=False):
     cropped = crop(x,is_label)
     hflipped = hflip(cropped, is_label)
     return hflipped
+
+def rotate(x, is_label=False):
+    return np.rot90(x, 1).copy()
+
+def blur(x, is_label=False):
+    t = np.linspace(-10, 10, 30)
+    bump = np.exp(-0.1*t**2)
+    bump /= np.trapz(bump) # normalize the integral to 1
+
+    # make a 2-D kernel out of it
+    kernel = bump[:, np.newaxis] * bump[np.newaxis, :]
+    return signal.fftconvolve(x, kernel[:, :, np.newaxis], mode='same')
+
+def rotate_and_blur(x, is_label=False):
+    rotated = rotate(x, is_label)
+    rotated_and_blurred = blur(rotated, is_label)
+    return rotated_and_blurred

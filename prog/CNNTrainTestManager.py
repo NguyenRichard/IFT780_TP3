@@ -151,7 +151,6 @@ class CNNTrainTestManager(object):
 
                     # zero the parameter gradients
                     self.optimizer.zero_grad()
-
                     # forward pass
                     train_outputs = self.model(train_inputs)
                     # computes loss using loss function loss_fn

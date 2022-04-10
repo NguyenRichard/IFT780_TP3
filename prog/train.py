@@ -23,8 +23,9 @@ from CNNTrainTestManager import CNNTrainTestManager, optimizer_setup
 from HDF5Dataset import HDF5Dataset
 from models.CNN import CNNet
 from models.CNNFullNet import FullNet
+from models.ResNet import ResNet
 from transforms import identity
-from transforms import crop_and_hflip
+from transforms import crop_and_hflip, rotate_and_blur
 
 
 def argument_parser():
@@ -42,7 +43,7 @@ def argument_parser():
     parser.add_argument("exp_name", type=str,
                         help="Name of experiment")
     parser.add_argument('--model', type=str, default="CNNet",
-                        choices=["CNNet", "FullNet"])
+                        choices=["CNNet", "FullNet", "ResNet"])
     parser.add_argument('--dataset_file', type=str,
                         help="Location of the hdf5 file")
     parser.add_argument('--batch_size', type=int, default=20,
@@ -61,7 +62,7 @@ def argument_parser():
                         help="The number of layer in dense blocks")
     parser.add_argument('--data_aug', action='store_true',
                         help="Data augmentation")
-    parser.add_argument('--data_aug_type', type=str, default="crop_and_hflip", choices=["crop_and_hflip"],
+    parser.add_argument('--data_aug_type', type=str, default="crop_and_hflip", choices=["crop_and_hflip", "rotate_and_blur"],
                         help="The type of data augmentation used")
     parser.add_argument('--predict', action='store_true',
                         help="Load weights to predict the mask of a randomly selected image from the test set")
@@ -99,6 +100,10 @@ if __name__ == "__main__":
         data_augment_transform = [
             crop_and_hflip
         ]
+    elif data_augment_type == 'rotate_and_blur':
+        data_augment_transform = [
+            rotate_and_blur
+        ]
     else:
         data_augment_transform = {
             identity
@@ -128,6 +133,8 @@ if __name__ == "__main__":
         model = CNNet(num_classes=num_classes, in_channels=num_modalities)
     elif args.model == 'FullNet':
         model = FullNet(num_classes=num_classes, in_channels=num_modalities, num_layers=num_layers, growth_rate=growth_rate)
+    elif args.model == 'ResNet':
+        model = ResNet.ResNet50(num_classes, num_modalities)  
 
     model_trainer = CNNTrainTestManager(model=model,
                                         trainset=train_set,
