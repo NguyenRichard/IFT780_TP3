@@ -244,7 +244,6 @@ class CNNTrainTestManager(object):
         f.savefig(join(path, 'fig1.png'))
         plt.show()
 
-    def plot_image_mask_prediction(self, path):
     def plot_image_mask_prediction(self, path,number,lr):
         """
         Function that plots an image its corresponding ground truth and
@@ -313,7 +312,6 @@ class CNNTrainTestManager(object):
         ax4.axis('off')
 
         # Save as a png image
-        f.savefig(join(path, 'fig2.png'))
         print("Figure saved at : ", join(path, 'fig'+str(number)+'_'+str(lr)+'.png'))
         f.savefig(join(path, 'fig'+str(number)+'_'+str(lr)+'.png'))
         # show image
