@@ -63,6 +63,14 @@ def argument_parser():
                         help="The number of layer in dense blocks")
     parser.add_argument('--data_aug', action='store_true',
                         help="Data augmentation")
+    parser.add_argument('--data_aug_type', type=str, default="crop_and_hflip", choices=["crop_and_hflip"],
+                        help="The type of data augmentation used")
+    parser.add_argument('--load_checkpoint', action='store_true',
+                        help="Load saved checkpoint")
+    parser.add_argument('--save_checkpoint', action='store_true',
+                        help="Save checkpoint")
+    parser.add_argument('--checkpoint_filename', type=str, default="checkpoint",
+                        help='Name of the checkpoint file')
     parser.add_argument('--predict', action='store_true',
                         help="Load weights to predict the mask of a randomly selected image from the test set")
     parser.add_argument('--bilinear', type=bool, default=False,
@@ -82,6 +90,10 @@ if __name__ == "__main__":
     data_augment = args.data_aug
     num_layers = args.dnl
     growth_rate = args.dgr
+    load_checkpoint = args.load_checkpoint
+    save_checkpoint = args.save_checkpoint
+    checkpoint_filename = args.checkpoint_filename
+    data_augment_type = args.data_aug_type
     bilinear = args.bilinear
 
     print("Learing rate : ",learning_rate)
@@ -90,9 +102,14 @@ if __name__ == "__main__":
     hdf5_file = args.dataset_file
 
     # Transform is used to normalize data and more
-    data_augment_transform = [
-        identity
-    ]
+    if data_augment_type == 'crop_and_hflip':
+        data_augment_transform = [
+            crop_and_hflip
+        ]
+    else:
+        data_augment_transform = {
+            identity
+        }
 
     if data_augment:
         print('Using data augmentation')
@@ -140,7 +157,6 @@ if __name__ == "__main__":
                                         )
 
     dice = 0
-
     if exists(join(path, args.model + '.pt')):
         model.load_weights(join(args.model, args.model + '.pt'))
         dice = model_trainer.evaluate_on_test_set()

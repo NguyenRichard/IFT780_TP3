@@ -17,7 +17,7 @@ from tqdm import tqdm
 from os.path import join
 from utils import mean_dice, convert_mask_to_rgb_image
 import matplotlib.pyplot as plt
-
+import os.path
 
 class CNNTrainTestManager(object):
     """
@@ -32,7 +32,15 @@ class CNNTrainTestManager(object):
                                               torch.optim.Optimizer]),
                  batch_size=1,
                  validation=None,
-                 use_cuda=False):
+                 use_cuda=False,
+                 save_checkpoint_folder_path="",
+                 save_checkpoint_filename="checkpoint",
+                 save_checkpoint=False,
+                 load_checkpoint=False,
+                 data_augmentation=False,
+                 data_augmentation_type="crop_and_hflip"
+                 ):
+                 
         """
         Args:
             model: model to train
@@ -44,6 +52,12 @@ class CNNTrainTestManager(object):
             validation: wether to use custom validation data or let the one by
                 default
             use_cuda: to Use the gpu to train the model
+            save_checkpoint_folder_path(string): path to the folder to save the checkpoint
+            save_checkpoint_filename(name): name of the checkpoint file
+            save_checkpoint(bool): activate checkpoint saving
+            load_checkpoint(bool): activate checkpoint loading
+            data_augmentation: whether
+            data_augmentation_type: type of data_augmentation
         """
 
         device_name = 'cuda:0' if use_cuda else 'cpu'
@@ -67,6 +81,41 @@ class CNNTrainTestManager(object):
         self.model = self.model.to(self.device)
         self.use_cuda = use_cuda
         self.metric_values = {}
+        self.checkpoint = {}
+        self.checkpoint_folder_path = save_checkpoint_folder_path
+        self.checkpoint_filename = save_checkpoint_filename
+        self.save_checkpoint = save_checkpoint
+        self.load_checkpoint = load_checkpoint
+        self.start_epoch = 0
+        self.data_augmentation = data_augmentation
+        self.data_augmentation_type = data_augmentation_type
+
+    def save(self, epoch):
+        self.checkpoint = {
+            'epoch': epoch,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
+            'loss': self.loss_fn,
+            'metric_values': self.metric_values
+        }
+        path = self.checkpoint_folder_path + "/" + self.checkpoint_filename + ".pt"
+        torch.save(self.checkpoint, path)
+        print("Checkpoint epoch", epoch+1, " saved.")
+
+    def load(self):
+        path = self.checkpoint_folder_path + "/" + self.checkpoint_filename + ".pt"
+        if os.path.exists(path):
+            self.checkpoint = torch.load(path, map_location=self.device)
+            self.model.load_state_dict(self.checkpoint['model_state_dict'])
+            self.optimizer.load_state_dict(self.checkpoint['optimizer'])
+            self.metric_values = self.checkpoint['metric_values']
+            self.loss_fn = self.checkpoint['loss']
+            self.start_epoch = self.checkpoint['epoch'] + 1
+
+    def augment_data(self, images, labels):
+        if self.data_augmentation_type == "crop_and_hflip":
+            return self.data_manager.augment_data_crop_and_hflip(images, labels, (244, 244), 2)
+
 
     def train(self, num_epochs):
         """
@@ -80,11 +129,15 @@ class CNNTrainTestManager(object):
         self.metric_values['val_loss'] = []
         self.metric_values['val_acc'] = []
 
+        # Load checkpoint
+        if self.load_checkpoint:
+            self.load()
+        
         # Create pytorch's train data_loader
         train_loader = self.data_manager.get_train_set()
 
         # train num_epochs times
-        for epoch in range(num_epochs):
+        for epoch in range(self.start_epoch, num_epochs):
             print("Epoch: {} of {}".format(epoch + 1, num_epochs))
             train_loss = 0.0
 
@@ -130,6 +183,10 @@ class CNNTrainTestManager(object):
             self.metric_values['train_loss'].append(np.mean(train_losses))
             self.metric_values['train_acc'].append(np.mean(train_accuracies))
             self.evaluate_on_validation_set()
+
+            #Save checkpoint
+            if self.save_checkpoint:
+                self.save(epoch)
 
         print("Finished training.")
 
