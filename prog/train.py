@@ -28,6 +28,8 @@ from models.CNN import CNNet
 from models.CNNFullNet import FullNet
 from models.UNet import UNet
 from transforms import identity
+from transforms import crop_and_hflip
+
 
 def argument_parser():
     """
