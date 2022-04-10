@@ -164,11 +164,11 @@ if __name__ == "__main__":
         model_trainer.plot_image_mask_prediction(args.exp_name)
         model_trainer.plot_metrics(args.exp_name)
 
-    if os.path.isfile(join(args.exp_name,"Lr&Dice.csv")):
-        df = pd.read_csv(join(args.exp_name,"Lr&Dice.csv"))
+    if os.path.isfile("Lr&Dice.csv"):
+        df = pd.read_csv("Lr&Dice.csv")
     else :
         df = pd.DataFrame(columns=["Model","Learning Rate","Dice"])
 
     df2 = {'Model': str(args.model), 'Learing Rate': learning_rate, 'Dice': dice}
     df = df.append(df2, ignore_index = True)
-    df.to_csv(join(args.exp_name,"Lr&Dice.csv"))
+    df.to_csv("Lr&Dice.csv")
