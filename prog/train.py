@@ -27,8 +27,9 @@ from HDF5Dataset import HDF5Dataset
 from models.CNN import CNNet
 from models.CNNFullNet import FullNet
 from models.UNet import UNet
+from models.ResNet import ResNet
 from transforms import identity
-from transforms import crop_and_hflip
+from transforms import crop_and_hflip, rotate_and_blur
 
 
 def argument_parser():
@@ -46,7 +47,7 @@ def argument_parser():
     parser.add_argument("exp_name", type=str,
                         help="Name of experiment")
     parser.add_argument('--model', type=str, default="CNNet",
-                        choices=["CNNet", "FullNet", "UNet", "UNetDense"])
+                        choices=["CNNet", "FullNet", "UNet", "UNetDense", "ResNet"])
     parser.add_argument('--dataset_file', type=str,
                         help="Location of the hdf5 file")
     parser.add_argument('--batch_size', type=int, default=20,
@@ -65,7 +66,7 @@ def argument_parser():
                         help="The number of layer in dense blocks")
     parser.add_argument('--data_aug', action='store_true',
                         help="Data augmentation")
-    parser.add_argument('--data_aug_type', type=str, default="crop_and_hflip", choices=["crop_and_hflip"],
+    parser.add_argument('--data_aug_type', type=str, default="crop_and_hflip", choices=["crop_and_hflip", "rotate_and_blur"],
                         help="The type of data augmentation used")
     parser.add_argument('--load_checkpoint', action='store_true',
                         help="Load saved checkpoint")
@@ -108,6 +109,10 @@ if __name__ == "__main__":
         data_augment_transform = [
             crop_and_hflip
         ]
+    elif data_augment_type == 'rotate_and_blur':
+        data_augment_transform = [
+            rotate_and_blur
+        ]
     else:
         data_augment_transform = {
             identity
@@ -140,6 +145,8 @@ if __name__ == "__main__":
         model = UNet(num_classes=num_classes, num_channels=num_modalities, bilinear=bilinear)
     elif args.model == 'UNetDense':
         model = UNet(num_classes=num_classes, num_channels=num_modalities, bilinear=bilinear, dense = True)
+    elif args.model == 'ResNet':
+        model = ResNet.ResNet50(num_classes, num_modalities) 
 
 
     model_trainer = CNNTrainTestManager(model=model,
