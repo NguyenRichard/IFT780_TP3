@@ -185,5 +185,8 @@ if __name__ == "__main__":
 
     df2 = {'Model': str(args.model), 'Learning Rate': learning_rate, 'Dice': dice}
     df = df.append(df2, ignore_index = True)
+    df.drop(df.columns[df.columns.str.contains('unnamed',case = False)],axis = 1, inplace = True)
+    df.drop(df.columns[df.columns.str.contains('standard',case = False)],axis = 1, inplace = True)
+
     df.to_csv("Lr&Dice.csv")
 
