@@ -299,7 +299,7 @@ class CNNTrainTestManager(object):
         ax2.legend()
 
         f.savefig(join(path, 'fig1.png'))
-        plt.show()
+        #plt.show()
 
     def plot_image_mask_prediction(self, path,number,lr):
         """
@@ -372,7 +372,7 @@ class CNNTrainTestManager(object):
         print("Figure saved at : ", join(path, 'fig'+str(number)+'_'+str(lr)+'.png'))
         f.savefig(join(path, 'fig'+str(number)+'_'+str(lr)+'.png'))
         # show image
-        plt.show()
+        #plt.show()
 
 
 def optimizer_setup(

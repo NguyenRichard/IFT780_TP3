@@ -178,8 +178,8 @@ if __name__ == "__main__":
         model_trainer.plot_image_mask_prediction(args.exp_name,2,learning_rate)# 2 is the number write on the fig you save
         model_trainer.plot_metrics(args.exp_name)
 
-    if os.path.isfile(join(args.exp_name,"Lr&Dice.csv")):
-        df = pd.read_csv(join(args.exp_name,"Lr&Dice.csv"))
+    if os.path.isfile("Lr&Dice.csv"):
+        df = pd.read_csv("Lr&Dice.csv")
     else :
         df = pd.DataFrame(columns=["Model","Learning Rate","Dice"])
 

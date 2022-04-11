@@ -27,7 +27,7 @@ def crop(x, is_label=False):
     padhbefore= math.floor(padheight/2)
     padhafter = math.ceil(padheight/2)
 
-    padded = np.pad(cropped, [(padwbefore, padwafter), (padhbefore, padhafter), (0, 0)], constant_values=128)
+    padded = np.pad(cropped, [(padwbefore, padwafter), (padhbefore, padhafter), (0, 0)], constant_values=0)
 
     return padded
 
