@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source env/bin/activate
+pip install torch
 
 case $1 in
  -[h?] | --help)
